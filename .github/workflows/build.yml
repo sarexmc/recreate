@@ -1,0 +1,28 @@
+name: Build Windows app
+on:
+  push: {tags: ['v*']}
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: scripts\build_exe.bat
+        shell: cmd
+      - run: scripts\setup_tools.bat
+        shell: cmd
+      - name: Empaquetar
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory release\MinecraftRecreator -Force
+          Copy-Item dist\MinecraftRecreator.exe release\MinecraftRecreator\
+          Copy-Item tools release\MinecraftRecreator\tools -Recurse
+          Compress-Archive release\MinecraftRecreator MinecraftRecreator-windows.zip
+      - uses: actions/upload-artifact@v4
+        with: {name: MinecraftRecreator-windows, path: MinecraftRecreator-windows.zip}
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with: {files: MinecraftRecreator-windows.zip}
