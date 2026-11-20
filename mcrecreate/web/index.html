@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minecraft Recreator</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<style>
+:root{--bg:#0b0d12;--p:rgba(255,255,255,.045);--b:rgba(255,255,255,.09);--t:#e6e9ef;--m:#8b93a7;--g:linear-gradient(135deg,#34d399,#22d3ee);--ok:#34d399;--w:#fbbf24;--e:#f87171}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 700px at 80% -10%,#16314a55,transparent),radial-gradient(900px 600px at -10% 110%,#1d3b2c55,transparent),var(--bg);color:var(--t);font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;display:flex}
+aside{width:380px;min-width:380px;height:100%;display:flex;flex-direction:column;border-right:1px solid var(--b);background:#0d1017cc;backdrop-filter:blur(14px)}
+header{padding:18px 18px 8px}.logo{font-size:20px;font-weight:800;letter-spacing:-.3px}.logo b{background:var(--g);-webkit-background-clip:text;color:transparent}
+.sub{color:var(--m);font-size:12px}#warn{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fbbf2418;border:1px solid #fbbf2455;color:var(--w);font-size:12px}
+.add{display:flex;gap:8px;padding:8px 18px}.add input{flex:1}
+input,select{background:#ffffff0d;border:1px solid var(--b);color:var(--t);border-radius:10px;padding:9px 11px;font:inherit;outline:none;min-width:0}input:focus,select:focus{border-color:#34d39988}
+.btn{background:var(--g);color:#04210f;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font:inherit;font-weight:700;transition:.15s}.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn.ghost{background:var(--p);color:var(--t);border:1px solid var(--b)}.btn.sm{padding:5px 10px;font-size:12px}
+#list{flex:1;overflow:auto;padding:6px 18px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--p);border:1px solid var(--b);border-radius:14px;padding:12px;cursor:pointer;transition:.15s}.card:hover{border-color:#ffffff30}.card.sel{border-color:#34d399aa;box-shadow:0 0 0 3px #34d39918}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st{font-size:11px;padding:3px 9px;border-radius:99px;background:#ffffff14;color:var(--m);white-space:nowrap}.st.ok{background:#34d39922;color:var(--ok)}.st.er{background:#f8717122;color:var(--e)}.st.wk{background:#fbbf2422;color:var(--w);animation:pl 1.2s infinite}
+@keyframes pl{50%{opacity:.5}}.row{display:flex;align-items:center;gap:8px;margin-top:10px}.sp{flex:1}.chk{font-size:12px;color:var(--m);display:flex;gap:6px;align-items:center}.hint{font-size:12px;color:var(--m)}
+details{margin-top:8px}summary{font-size:12px;color:var(--m);cursor:pointer}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.grid label{font-size:11px;color:var(--m);display:flex;flex-direction:column;gap:4px}
+.busy .go{opacity:.4;pointer-events:none}
+.glob{padding:12px 18px 16px;border-top:1px solid var(--b);display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.glob label{font-size:12px;color:var(--m);display:flex;flex-direction:column;gap:4px}.glob .full{grid-column:1/3}
+input[type=range]{padding:0;accent-color:#34d399}.val{color:var(--t);font-weight:600}
+main{flex:1;position:relative;min-width:0}#vp{position:absolute;inset:0}
+.hud{position:absolute;left:18px;top:16px;padding:8px 12px;border-radius:12px;background:#0b0d12aa;border:1px solid var(--b);font-size:12px;color:var(--m);backdrop-filter:blur(8px)}
+.tools{position:absolute;right:18px;top:14px;display:flex;gap:8px}
+#empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--m);pointer-events:none}#empty .big{font-size:56px}#empty h2{color:var(--t);margin:8px 0 4px}
+#logw{position:absolute;left:18px;right:18px;bottom:14px}#logt{cursor:pointer;font-size:12px;color:var(--m)}#log{display:none;margin-top:6px;height:170px;overflow:auto;background:#07090dee;border:1px solid var(--b);border-radius:12px;padding:10px;font:11px/1.4 Consolas,monospace;color:#9fb3c8;white-space:pre-wrap}
+#toast{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);background:#111827;border:1px solid #34d39966;padding:10px 16px;border-radius:12px;display:none}
+</style></head><body>
+<aside>
+<header><div class="logo">⛏ Minecraft <b>Recreator</b></div><div class="sub">Convierte videos y streams en construcciones de Minecraft · <b style="color:#34d399">v1.2 (con Desde/Hasta)</b></div><div id="warn" hidden></div></header>
+<div class="add"><input id="url" placeholder="Pega uno o varios links…"><button class="btn ghost" id="pastb" title="Pegar desde el portapapeles">📋 Pegar</button><button class="btn" id="addb">Añadir</button></div>
+<div id="list"></div>
+<div class="glob">
+<label>Tamaño: <span class="val" id="sizev">96</span> bloques<input type="range" id="size" min="32" max="256" value="96"></label>
+<label>Relleno de huecos: <span class="val" id="fillv">1</span><input type="range" id="fill" min="0" max="3" value="1"></label>
+<label>Máx. fotogramas<input type="number" id="max" value="150" min="40" max="600" step="10"></label>
+<label class="chk" style="justify-content:flex-end"><span><input type="checkbox" id="dense"> Densa (solo NVIDIA)</span></label>
+</div>
+</aside>
+<main><div id="vp"></div><div class="hud" id="hud">Sin vista previa</div>
+<div class="tools"><button class="btn ghost sm" id="rot">⟳ Auto-rotar</button><button class="btn sm" id="exp">💾 Exportar .schem / .mcfunction</button></div>
+<div id="empty"><div class="big">🧱</div><h2>Tu mundo aparecerá aquí</h2><div>Añade un link, pulsa ▶ Procesar y mira lo que reconstruyó.<br>Arrastra para girar · rueda para zoom</div></div>
+<div id="toast"></div>
+<div id="logw"><div id="logt">▸ Registro</div><div id="log"></div></div></main>
+<script type="module">
+import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const $=s=>document.querySelector(s),UPS=['-y','y','z','-z','x','-x'];let S={items:[]},sel=null,logn=0,loaded='',mesh;
+const api=(p,b)=>fetch('/api/'+p,{method:'POST',body:JSON.stringify(b||{})}).then(r=>r.json());
+const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const opts=()=>({max:+$('#max').value,dense:$('#dense').checked}),cls=t=>t.includes('listo')?'ok':t==='error'?'er':t.includes('…')?'wk':'';
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',4500)}
+// ---- 3D ----
+const vp=$('#vp'),ren=new THREE.WebGLRenderer({antialias:true,alpha:true});ren.setPixelRatio(devicePixelRatio);vp.append(ren.domElement);
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(50,1,.1,2000),ctl=new OrbitControls(cam,ren.domElement);ctl.enableDamping=true;ctl.autoRotateSpeed=1.2;
+scene.add(new THREE.HemisphereLight(0xdfefff,0x20262e,1.7));const sun=new THREE.DirectionalLight(0xffffff,1.6);sun.position.set(1,2,1.2);scene.add(sun);
+const grid=new THREE.GridHelper(400,100,0x2a3a4a,0x1a2430);scene.add(grid);cam.position.set(80,70,80);
+const fit=()=>{const w=vp.clientWidth,h=vp.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()};new ResizeObserver(fit).observe(vp);fit();
+(function loop(){requestAnimationFrame(loop);ctl.update();ren.render(scene,cam)})();
+function show(d){if(mesh){scene.remove(mesh);mesh.geometry.dispose();mesh.material.dispose()}
+ const a=new Int16Array(Uint8Array.from(atob(d.data),c=>c.charCodeAt(0)).buffer),n=a.length/4,[sx,sy,sz]=d.shape;
+ mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial(),n);const m=new THREE.Matrix4(),c=new THREE.Color();
+ for(let i=0;i<n;i++){m.setPosition(a[4*i]-sx/2,a[4*i+1],a[4*i+2]-sz/2);mesh.setMatrixAt(i,m);c.set(d.pal[a[4*i+3]]).multiplyScalar(.93+Math.random()*.1);mesh.setColorAt(i,c)}
+ scene.add(mesh);const D=Math.max(sx,sy,sz)*1.5;cam.position.set(D,D*.8,D);ctl.target.set(0,sy/2,0);$('#empty').style.display='none';$('#hud').textContent=`${n.toLocaleString()} bloques · ${sx}×${sy}×${sz}`}
+// ---- lista ----
+function card(i){const e=document.createElement('div'),c=i.id==='comb';e.className='card';e.dataset.id=i.id;
+ e.innerHTML=`<div class="top"><div class="name" title="${esc(i.src)}">${c?'🧩':'🎬'} ${esc(i.src.length>44?'…'+i.src.slice(-42):i.src)}</div><span class="st"></span></div>
+ <div class="row">${c?'<span class="hint">Une todos los links con ✓</span>':`<label class="chk"><input type="checkbox" data-k="use" ${i.use?'checked':''}> usar en combinada</label>`}<span class="sp"></span>
+ <button class="btn sm go">▶ ${c?'Combinar':'Procesar'}</button>${c?'':'<button class="btn ghost sm del">✕</button>'}</div>
+ <details><summary>Ajustes</summary><div class="grid">${c?'':`<label>Seg. entre fotogramas<input type="number" step=".5" min=".2" data-k="every" value="${i.every}"></label><label>Grabar directo (seg, 0=no)<input type="number" step="60" min="0" data-k="stream" value="${i.stream}"></label><label>Desde (h:mm:ss)<input type="text" data-k="start" placeholder="1:13:18" value="${i.start}"></label><label>Hasta (h:mm:ss)<input type="text" data-k="end" placeholder="1:33:33" value="${i.end}"></label>`}
+ <label>Eje vertical<select data-k="up">${UPS.map(u=>`<option ${u===i.up?'selected':''}>${u}</option>`).join('')}</select></label></div></details>`;
+ e.onclick=ev=>{const t=ev.target;if(t.closest('.go'))return api('process',{id:i.id,...opts()}).then(r=>r.error&&toast(r.error));
+  if(t.closest('.del')){return api('remove',{id:i.id})}if(!t.closest('details,label,input,select')){sel=i.id;poll()}};
+ e.onchange=async ev=>{const t=ev.target,k=t.dataset.k;if(!k)return;await api('update',{id:i.id,[k]:t.type==='checkbox'?t.checked:t.type==='number'?+t.value:t.value});await poll()};return e}
+function renderList(){const L=$('#list'),sig=S.items.map(i=>i.id).join();if(L.dataset.sig!==sig){L.dataset.sig=sig;L.innerHTML='';S.items.forEach(i=>L.append(card(i)))}
+ S.items.forEach(i=>{const c=L.querySelector(`[data-id="${i.id}"]`),s=c.querySelector('.st');s.textContent=i.status;s.className='st '+cls(i.status);c.classList.toggle('sel',i.id===sel)})}
+async function load(){const it=S.items.find(i=>i.id===sel);if(!it||!it.has){if(mesh){scene.remove(mesh);mesh=null}loaded='';$('#empty').style.display='flex';$('#hud').textContent='Sin vista previa';return}
+ const size=+$('#size').value,fill=+$('#fill').value,key=[sel,it.ver,it.up,size,fill].join();if(key===loaded)return;loaded=key;
+ const d=await fetch(`/api/voxels?id=${sel}&size=${size}&fill=${fill}`).then(r=>r.json());if(d.error)return toast(d.error);show(d)}
+async function poll(){const r=await fetch('/api/state?log='+logn).then(r=>r.json());S=r;logn=r.logn;
+ r.log.forEach(l=>{const e=$('#log');e.textContent+=l+'\n';e.scrollTop=1e9});
+ if(!S.items.find(i=>i.id===sel))sel=(S.items[0]||{}).id;document.body.classList.toggle('busy',r.busy);
+ const w=$('#warn');w.hidden=!r.miss.length;w.textContent='Faltan herramientas: '+r.miss.join(', ')+'. Ejecuta scripts/setup_tools.bat y deja la carpeta "tools" junto al programa.';
+ renderList();load()}
+$('#addb').onclick=async()=>{const s=$('#url').value.trim().split(/\s+/).filter(Boolean);if(!s.length)return;const r=await api('add',{srcs:s});$('#url').value='';sel=r.ids.at(-1);await poll()};
+async function paste(){const r=await api('clipboard');let t=r.text||'';if(!t){try{t=await navigator.clipboard.readText()}catch(e){}}
+ if(t)$('#url').value=($('#url').value+' '+t).trim();else toast(r.error||'El portapapeles está vacío')}
+$('#pastb').onclick=paste;
+$('#url').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v'){e.preventDefault();paste()}});
+$('#url').onkeydown=e=>e.key==='Enter'&&$('#addb').click();
+for(const k of['size','fill']){$('#'+k).oninput=e=>$('#'+k+'v').textContent=e.target.value;$('#'+k).onchange=load}
+$('#exp').onclick=()=>api('export',{id:sel,size:+$('#size').value,fill:+$('#fill').value}).then(r=>toast(r.error||'Guardado en '+r.path));
+$('#rot').onclick=()=>ctl.autoRotate=!ctl.autoRotate;
+$('#logt').onclick=()=>{const e=$('#log');e.style.display=e.style.display==='block'?'none':'block'};
+poll();setInterval(poll,800);
+</script></body></html>
